@@ -1,0 +1,31 @@
+name: Build binaries
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository including submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Prepare directories
+        run: mkdir binaries
+
+      - name: Build Mimiker userspace
+        run: ./build-mimiker-userspace
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kite-binaries
+          path: binaries/**
+          include-hidden-files: true
+

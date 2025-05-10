@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+
+cd mimiker
+
+sudo apt-get -q update
+xargs -a packages.txt sudo apt-get install -y --no-install-recommends
+
+# Add LLVM 14 repository and install related tools
+curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /usr/share/keyrings/llvm.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/llvm.gpg] http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main" | \
+        sudo tee /etc/apt/sources.list.d/llvm-14.list && \
+    sudo apt-get update && \
+    sudo apt-get install -y --no-install-recommends \
+        clang-14 clang-format-14 llvm-14 lld-14
+
+make -j$(nproc) BOARD=sifive_u
+
+# GH actions don't preserve empty directories in artifacts,
+# create dummy files to include them
+touch sysroot/dev/.keep
+touch sysroot/root/.keep
+touch sysroot/tmp/.keep
+
+mv sysroot ../binaries/mimiker-sysroot
+cd ..
